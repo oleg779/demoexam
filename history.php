@@ -1,119 +1,159 @@
 <?php
 session_start();
-if(!isset($_SESSION['user_id'])) die('Чтобы посмотреть историю заявок, надо войти в аккаунт.');
+if(!isset($_SESSION['user_id'])) die('Чтобы посмотреть историю заявок, необходимо <a href="login.php">войти в аккаунт</a>.');
 include('db.php');
 
-// Код изменения отзыва
 if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['review'])) {
     $review = $con->real_escape_string($_POST['review']);
     $user_id = (int)$_SESSION['user_id'];
     $con->query("UPDATE users SET review='$review' WHERE id='$user_id'");
-    echo '<div style="color:green; padding:10px; background:#e6ffe6; margin-bottom:10px;">✓ Отзыв оставлен</div>';
+    echo '<div style="color:green; padding:10px; background:#e6ffe6; margin-bottom:10px;">✓ Отзыв успешно сохранён</div>';
 }
 
-// Код истории заявок
 $user_id = (int)$_SESSION['user_id'];
 $query = $con->query("SELECT * FROM request WHERE user_id='$user_id' ORDER BY date DESC");
-if(!$query) die('query error: ' . $con->error); 
+if(!$query) die('Ошибка запроса: ' . $con->error); 
 ?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Личный кабинет - история заявок</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История заявок - Учусь.РФ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 20px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #007bff 0%, #0d47a1 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background: #fff;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            background: #ffffff;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
         }
+
         h1 {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 28px;
+            font-weight: 700;
         }
+
         .btn-home {
             display: inline-block;
-            background-color: #007bff;
+            background: #007bff;
             color: white;
             padding: 10px 20px;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 8px;
             margin-bottom: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
+
         .btn-home:hover {
-            background-color: #0056b3;
+            background: #0d47a1;
+            transform: translateY(-2px);
         }
+
         .request {
-            border: 1px solid #ddd;
-            margin: 15px 0;
-            padding: 15px;
-            border-radius: 5px;
-            background-color: #fafafa;
+            border: 1px solid #dee2e6;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f8f9fa;
         }
+
         .request h2 {
-            margin-top: 0;
-            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+            color: #007bff;
+            margin-bottom: 15px;
         }
+
+        .request p {
+            margin: 8px 0;
+            font-size: 14px;
+            color: #555;
+        }
+
         .review-form {
             margin-top: 15px;
-            padding-top: 10px;
-            border-top: 1px dashed #ccc;
+            padding-top: 15px;
+            border-top: 1px dashed #dee2e6;
         }
-        input[type="text"] {
+
+        .review-form input {
             width: 70%;
-            padding: 8px;
-            margin-right: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
         }
-        button {
-            padding: 8px 15px;
-            background: #4CAF50;
+
+        .review-form button {
+            padding: 10px 20px;
+            background: #28a745;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            transition: background 0.3s ease;
         }
-        button:hover {
-            background: #45a049;
+
+        .review-form button:hover {
+            background: #218838;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #888;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.php" class="btn-home"> На главную</a>
+        <a href="index.php" class="btn-home">🏠 На главную</a>
         
         <h1>История заявок</h1>
         
         <?php
         $i = 0;
         if($query->num_rows == 0) {
-            echo '<p style="text-align:center; color:#666;">У вас пока нет заявок.</p>';
+            echo '<div class="empty-state">📭 У вас пока нет заявок.<br><br><a href="create.php" style="color:#007bff;">Создать первую заявку →</a></div>';
         }
         while($request = $query->fetch_assoc()) {
             $i++; 
             echo '
             <div class="request">
-                <h2>Заявка ' . $i . '</h2>
-                <b>Дата: </b>' . htmlspecialchars($request['date']) . '<br>
-                <b>Вид услуги: </b>' . htmlspecialchars($request['curses']) . '<br>
-                <b>Тип оплаты: </b>' . htmlspecialchars($request['payment']) . '<br><br>
-                <b>Статус: </b>' . htmlspecialchars($request['status']) . '<br>';
+                <h2>Заявка №' . $i . '</h2>
+                <p><strong>📅 Дата:</strong> ' . htmlspecialchars($request['date']) . '</p>
+                <p><strong>📚 Курс:</strong> ' . htmlspecialchars($request['curses']) . '</p>
+                <p><strong>💳 Оплата:</strong> ' . htmlspecialchars($request['payment']) . '</p>
+                <p><strong>📌 Статус:</strong> ' . htmlspecialchars($request['status']) . '</p>';
                 
             if($request['status'] === 'Обучение завершено') {
                 echo '
                 <div class="review-form">
                     <form action="" method="POST">
-                        <input type="text" name="review" placeholder="Отзыв об услуге" value="' . htmlspecialchars($request['review']) . '">
-                        <button type="submit"> Оставить отзыв</button>
+                        <input type="text" name="review" placeholder="Оставьте отзыв о курсе" value="' . htmlspecialchars($request['review']) . '">
+                        <button type="submit">✍️ Оставить отзыв</button>
                     </form>
                 </div>';
             }
